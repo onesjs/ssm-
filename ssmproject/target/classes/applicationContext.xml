@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns:context="http://www.springframework.org/schema/context" xmlns:tx="http://www.springframework.org/schema/tx"
+       xmlns:aop="http://www.springframework.org/schema/aop"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd http://www.springframework.org/schema/context https://www.springframework.org/schema/context/spring-context.xsd http://www.springframework.org/schema/tx http://www.springframework.org/schema/tx/spring-tx.xsd http://www.springframework.org/schema/aop https://www.springframework.org/schema/aop/spring-aop.xsd">
+
+    <!--开启注解扫描-->
+    <context:component-scan base-package="dpdd">
+    </context:component-scan>
+
+    <!--spring配置Mybatis框架-->
+    <!--配置连接池-->
+    <bean id="dataSource" class="com.mchange.v2.c3p0.ComboPooledDataSource">
+        <property name="user" value="root"/>
+        <property name="password" value="root"/>
+        <property name="jdbcUrl" value="jdbc:mysql://localhost:3306/school?serverTimezone=UTC&amp;characterEncoding=utf-8"/>
+        <property name="driverClass" value="com.mysql.jdbc.Driver"/>
+    </bean>
+    <!--配置SqlSessionFactory工厂-->
+    <bean id="factory" class="org.mybatis.spring.SqlSessionFactoryBean">
+        <property name="dataSource" ref="dataSource"/>
+    </bean>
+    <!--扫描dpdd.dao包里所有的Mybatis的注解-->
+    <bean id="mapperScanner" class="org.mybatis.spring.mapper.MapperScannerConfigurer">
+        <property name="basePackage" value="dpdd.dao"/>
+    </bean>
+    <!--配置spring声明式事务管理-->
+    <!--配置事务管理器-->
+    <bean id="manager" class="org.springframework.jdbc.datasource.DataSourceTransactionManager">
+        <property name="dataSource" ref="dataSource"/>
+    </bean>
+    <!--配置事务通知-->
+    <tx:advice id="txAdvice" transaction-manager="manager">
+        <tx:attributes>
+            <tx:method name="save*" read-only="true"/>
+            <tx:method name="delete*" read-only="true"/>
+            <tx:method name="update*" read-only="true"/>
+        </tx:attributes>
+    </tx:advice>
+    <!--配置Aop增强-->
+    <aop:config>
+        <aop:pointcut id="pt1" expression="execution(* dpdd.service.impl.StudentServiceImpl.*(..))"/>
+        <aop:advisor advice-ref="txAdvice" pointcut-ref="pt1"/>
+    </aop:config>
+
+</beans>
